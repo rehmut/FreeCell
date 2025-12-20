@@ -17,6 +17,7 @@ export const Card: React.FC<CardProps> = ({ card, isDraggable = false, onClick, 
         data: card,
         disabled: !isDraggable,
     });
+    const lastTapRef = React.useRef<number>(0);
 
     const transformStyle = transform ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
@@ -25,12 +26,24 @@ export const Card: React.FC<CardProps> = ({ card, isDraggable = false, onClick, 
     } : {};
 
     if (!card.faceUp) {
+        const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+            if (isDragging) return;
+            if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
+            const now = Date.now();
+            if (now - lastTapRef.current < 260) {
+                lastTapRef.current = 0;
+                onDoubleClick?.();
+                return;
+            }
+            lastTapRef.current = now;
+        };
         return (
             <div
                 className={`${styles.card} ${styles.faceDown} ${isDraggable ? styles.draggable : styles.static}`}
                 style={{ ...style }}
                 onClick={onClick}
                 onDoubleClick={onDoubleClick}
+                onPointerUp={handlePointerUp}
             />
         );
     }
@@ -55,6 +68,17 @@ export const Card: React.FC<CardProps> = ({ card, isDraggable = false, onClick, 
             }}
             onClick={onClick}
             onDoubleClick={onDoubleClick}
+            onPointerUp={(event) => {
+                if (isDragging) return;
+                if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
+                const now = Date.now();
+                if (now - lastTapRef.current < 260) {
+                    lastTapRef.current = 0;
+                    onDoubleClick?.();
+                    return;
+                }
+                lastTapRef.current = now;
+            }}
         />
     );
 };
