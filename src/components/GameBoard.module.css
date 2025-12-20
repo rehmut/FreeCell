@@ -197,19 +197,58 @@
 }
 
 @media (max-width: 720px) {
+    .board {
+        padding: 6px 4px 10px;
+        gap: 10px;
+    }
+
     .topArea {
-        flex-direction: column;
+        flex-direction: row;
         align-items: stretch;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        gap: calc(var(--pile-gap) * 1.5);
     }
 
     .section {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .sectionLabel {
+        font-size: 0.6rem;
+        letter-spacing: 0.12em;
+        margin-bottom: 4px;
+        padding-bottom: 4px;
+    }
+
+    .pilesArea,
+    .foundations {
+        justify-content: space-between;
         width: 100%;
-        padding: 12px 14px;
+    }
+
+    .tableauArea {
+        overflow-x: hidden;
+        justify-content: space-between;
+        padding-bottom: 4px;
     }
 
     .header {
         flex-direction: column;
         align-items: flex-start;
+        gap: 8px;
+    }
+
+    .title {
+        font-size: 1.35rem;
+    }
+
+    .stat {
+        font-size: 0.75rem;
+        padding: 4px 8px;
     }
 
     .actions {
@@ -218,10 +257,32 @@
 
     .actions .button {
         flex: 1;
+        padding: 6px 8px;
+        font-size: 0.78rem;
     }
 
     .statsCard,
     .winCard {
-        width: min(92vw, 360px);
+        width: min(92vw, 340px);
+    }
+}
+
+@media (max-width: 560px) {
+    .board {
+        padding: 4px 2px 8px;
+    }
+
+    .topArea {
+        gap: var(--pile-gap);
+    }
+
+    .section {
+        padding: 6px;
+        gap: 6px;
+    }
+
+    .actions .button {
+        font-size: 0.72rem;
+        padding: 6px;
     }
 }

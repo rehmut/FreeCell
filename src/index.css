@@ -39,17 +39,20 @@ body {
 
 @media (max-width: 720px) {
   :root {
-    --card-width: clamp(60px, 16vw, 78px);
+    --card-width: clamp(44px, 10vw, 64px);
     --card-height: calc(var(--card-width) * 1.4);
-    --stack-offset: clamp(18px, 3.6vw, 28px);
-    --pile-gap: clamp(4px, 2vw, 10px);
+    --card-radius: clamp(7px, 0.9vw, 10px);
+    --stack-offset: clamp(12px, 2.6vw, 22px);
+    --pile-gap: clamp(3px, 1.4vw, 8px);
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 560px) {
   :root {
-    --card-width: clamp(56px, 18vw, 72px);
+    --card-width: clamp(34px, 10vw, 52px);
     --card-height: calc(var(--card-width) * 1.4);
-    --stack-offset: clamp(16px, 4vw, 24px);
+    --card-radius: clamp(6px, 0.9vw, 9px);
+    --stack-offset: clamp(10px, 2.4vw, 18px);
+    --pile-gap: clamp(2px, 1.1vw, 6px);
   }
 }

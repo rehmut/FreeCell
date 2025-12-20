@@ -70,6 +70,24 @@
     }
 }
 
+@media (max-width: 560px) {
+    .app {
+        padding: 12px 8px calc(52px + env(safe-area-inset-bottom));
+    }
+
+    .themeSelector {
+        right: 8px;
+        bottom: calc(8px + env(safe-area-inset-bottom));
+        padding: 6px 8px;
+        gap: 8px;
+    }
+
+    .themeBtn {
+        width: 26px;
+        height: 26px;
+    }
+}
+
 .themeBtn {
     width: 30px;
     height: 30px;
