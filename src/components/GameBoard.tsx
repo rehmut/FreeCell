@@ -7,6 +7,18 @@ import { Card } from './Card';
 import type { Card as CardType } from '../logic/types';
 import styles from './GameBoard.module.css';
 
+type WinBurstCard = {
+    id: string;
+    imageUrl: string;
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
+    spin: number;
+    duration: number;
+    delay: number;
+};
+
 export const GameBoard: React.FC = () => {
     const {
         freeCells, foundations, tableau, moves, startTime, isWon, isStuck, stats, moveHistory, deviceLabel,
@@ -17,6 +29,7 @@ export const GameBoard: React.FC = () => {
     const [activeCard, setActiveCard] = React.useState<CardType | null>(null);
     const [elapsedSeconds, setElapsedSeconds] = React.useState(0);
     const [isStatsOpen, setIsStatsOpen] = React.useState(false);
+    const [winBurst, setWinBurst] = React.useState<WinBurstCard[]>([]);
 
     React.useEffect(() => {
         if (!startTime) return;
@@ -27,6 +40,27 @@ export const GameBoard: React.FC = () => {
         const interval = window.setInterval(tick, 1000);
         return () => window.clearInterval(interval);
     }, [startTime]);
+
+    React.useEffect(() => {
+        if (!isWon) {
+            setWinBurst([]);
+            return;
+        }
+        const randomBetween = (min: number, max: number) => Math.random() * (max - min) + min;
+        const cards = Object.values(foundations).flat();
+        const nextBurst = cards.map((card, index) => ({
+            id: `${card.id}-${index}`,
+            imageUrl: `/svg-cards/${card.rank}_of_${card.suit}.svg`,
+            startX: randomBetween(-45, 45),
+            startY: randomBetween(-30, 30),
+            endX: randomBetween(-12, 12),
+            endY: randomBetween(-12, 12),
+            spin: randomBetween(-40, 40),
+            duration: randomBetween(2.4, 3.6),
+            delay: randomBetween(0, 1.6)
+        }));
+        setWinBurst(nextBurst);
+    }, [isWon, foundations]);
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -123,21 +157,6 @@ export const GameBoard: React.FC = () => {
 
                 <div className={styles.topArea}>
                     <div className={styles.section}>
-                        <div className={styles.sectionLabel}>Free Cells</div>
-                        <div className={styles.pilesArea}>
-                            {freeCells.map((card, index) => (
-                                <Pile
-                                    key={`freecell-${index}`}
-                                    id={`freecell-${index}`}
-                                    cards={card ? [card] : []}
-                                    type="freecell"
-                                    onCardDoubleClick={(c) => attemptMoveToFoundation(c.id)}
-                                />
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className={styles.section}>
                         <div className={styles.sectionLabel}>Foundations</div>
                         <div className={styles.foundations}>
                             {Object.entries(foundations).map(([suit, cards]) => (
@@ -148,6 +167,21 @@ export const GameBoard: React.FC = () => {
                                     type="foundation"
                                 // Foundations usually don't need double click to move anywhere, but maybe move back? 
                                 // For now, no action.
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className={styles.section}>
+                        <div className={styles.sectionLabel}>Free Cells</div>
+                        <div className={styles.pilesArea}>
+                            {freeCells.map((card, index) => (
+                                <Pile
+                                    key={`freecell-${index}`}
+                                    id={`freecell-${index}`}
+                                    cards={card ? [card] : []}
+                                    type="freecell"
+                                    onCardDoubleClick={(c) => attemptMoveToFoundation(c.id)}
                                 />
                             ))}
                         </div>
@@ -181,6 +215,26 @@ export const GameBoard: React.FC = () => {
 
             {isWon && (
                 <div className={styles.winOverlay}>
+                    {winBurst.length > 0 && (
+                        <div className={styles.winCelebration}>
+                            {winBurst.map((card) => (
+                                <div
+                                    key={card.id}
+                                    className={styles.winFlyingCard}
+                                    style={{
+                                        '--start-x': `${card.startX}vw`,
+                                        '--start-y': `${card.startY}vh`,
+                                        '--end-x': `${card.endX}vw`,
+                                        '--end-y': `${card.endY}vh`,
+                                        '--spin': `${card.spin}deg`,
+                                        '--duration': `${card.duration}s`,
+                                        '--delay': `${card.delay}s`,
+                                        backgroundImage: `url(${card.imageUrl})`
+                                    } as React.CSSProperties}
+                                />
+                            ))}
+                        </div>
+                    )}
                     <div className={styles.winCard}>
                         <div className={styles.winTitle}>You win</div>
                         <div className={styles.winText}>

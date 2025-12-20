@@ -152,7 +152,33 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+    isolation: isolate;
     z-index: 200;
+}
+
+.winCelebration {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.winFlyingCard {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--card-width);
+    aspect-ratio: var(--card-aspect);
+    border-radius: var(--card-radius);
+    background-color: white;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.35);
+    animation: winFly var(--duration) ease-in-out infinite;
+    animation-delay: calc(var(--delay) * -1);
+    will-change: transform, opacity;
+    opacity: 0;
 }
 
 .winCard {
@@ -163,6 +189,8 @@
     text-align: center;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
     min-width: 280px;
+    position: relative;
+    z-index: 2;
 }
 
 .winTitle {
@@ -183,6 +211,8 @@
     padding: 24px 28px;
     min-width: 300px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    position: relative;
+    z-index: 2;
 }
 
 .statsRow {
@@ -199,6 +229,23 @@
     gap: 10px;
     justify-content: center;
     margin-top: 10px;
+}
+
+@keyframes winFly {
+    0% {
+        transform: translate(calc(-50% + var(--start-x)), calc(-50% + var(--start-y))) scale(0.35) rotate(var(--spin));
+        opacity: 0;
+    }
+    18% {
+        opacity: 1;
+    }
+    72% {
+        opacity: 0.95;
+    }
+    100% {
+        transform: translate(calc(-50% + var(--end-x)), calc(-50% + var(--end-y))) scale(1.7) rotate(calc(var(--spin) * 1.1));
+        opacity: 0;
+    }
 }
 
 @media (max-width: 900px) {
