@@ -1,0 +1,55 @@
+:root {
+  --card-width: clamp(72px, 8.5vw, 96px);
+  --card-height: calc(var(--card-width) * 1.4);
+  --card-radius: clamp(8px, 0.9vw, 12px);
+  --stack-offset: clamp(22px, 2.2vw, 34px);
+  --pile-gap: clamp(6px, 1vw, 12px);
+  --board-max: 1100px;
+  --panel-bg: rgba(255, 255, 255, 0.08);
+  --panel-border: rgba(255, 255, 255, 0.18);
+  --text-muted: rgba(255, 255, 255, 0.7);
+  --accent: #f6d06a;
+  --font-ui: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Verdana', sans-serif;
+  --font-display: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+  touch-action: manipulation;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  background: #0a2c22;
+  color: #f2f5f2;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  :root {
+    --board-max: 100%;
+  }
+}
+
+@media (max-width: 720px) {
+  :root {
+    --card-width: clamp(60px, 16vw, 78px);
+    --card-height: calc(var(--card-width) * 1.4);
+    --stack-offset: clamp(18px, 3.6vw, 28px);
+    --pile-gap: clamp(4px, 2vw, 10px);
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --card-width: clamp(56px, 18vw, 72px);
+    --card-height: calc(var(--card-width) * 1.4);
+    --stack-offset: clamp(16px, 4vw, 24px);
+  }
+}

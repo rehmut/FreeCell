@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+  <g fill="currentColor">
+    <path d="M100 20 L30 120 C20 150 40 175 70 175 C85 175 95 168 100 160 C105 168 115 175 130 175 C160 175 180 150 170 120 Z" />
+    <path d="M85 175 L75 205 L125 205 L115 175 Z" />
+  </g>
+</svg>

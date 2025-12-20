@@ -1,0 +1,80 @@
+.app {
+    min-height: 100vh;
+    min-height: 100dvh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 24px calc(70px + env(safe-area-inset-bottom));
+    position: relative;
+    transition: background 0.35s ease;
+    --felt-base: #0f5f4d;
+    --felt-dark: #06322a;
+    --felt-glow: rgba(92, 220, 180, 0.16);
+    background:
+        radial-gradient(circle at 20% 15%, var(--felt-glow), transparent 55%),
+        radial-gradient(circle at 80% 0%, rgba(255, 255, 255, 0.08), transparent 40%),
+        linear-gradient(160deg, var(--felt-base), var(--felt-dark));
+}
+
+.themeGreen {
+    --felt-base: #0f5f4d;
+    --felt-dark: #06322a;
+    --felt-glow: rgba(92, 220, 180, 0.16);
+    --panel-bg: rgba(255, 255, 255, 0.1);
+    --panel-border: rgba(255, 255, 255, 0.2);
+    --accent: #f7c86a;
+}
+
+.themeDark {
+    --felt-base: #1c1f24;
+    --felt-dark: #0c0e12;
+    --felt-glow: rgba(120, 150, 210, 0.14);
+    --panel-bg: rgba(255, 255, 255, 0.06);
+    --panel-border: rgba(255, 255, 255, 0.12);
+    --accent: #9fd3ff;
+}
+
+.themeBlue {
+    --felt-base: #0a4c74;
+    --felt-dark: #062c45;
+    --felt-glow: rgba(90, 170, 255, 0.18);
+    --panel-bg: rgba(255, 255, 255, 0.09);
+    --panel-border: rgba(255, 255, 255, 0.18);
+    --accent: #f4d06f;
+}
+
+.themeSelector {
+    position: absolute;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    right: 16px;
+    background: rgba(5, 8, 12, 0.45);
+    padding: 10px 12px;
+    border-radius: 14px;
+    display: flex;
+    gap: 10px;
+    z-index: 100;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+}
+
+@media (max-width: 720px) {
+    .app {
+        padding: 16px 12px calc(60px + env(safe-area-inset-bottom));
+    }
+
+    .themeSelector {
+        right: 12px;
+        bottom: calc(12px + env(safe-area-inset-bottom));
+        padding: 8px 10px;
+    }
+}
+
+.themeBtn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.15);
+}
