@@ -1,6 +1,6 @@
 .card {
   width: var(--card-width);
-  aspect-ratio: 2.5/3.5;
+  aspect-ratio: var(--card-aspect);
   height: auto;
   background-color: white;
   border-radius: var(--card-radius);
