@@ -124,6 +124,13 @@
     transform: none;
 }
 
+.undoButton {
+    position: fixed;
+    left: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    z-index: 150;
+}
+
 .primaryButton {
     background: var(--accent);
     border-color: rgba(0, 0, 0, 0.2);
@@ -268,6 +275,11 @@
         font-size: 0.78rem;
     }
 
+    .undoButton {
+        left: 12px;
+        bottom: calc(12px + env(safe-area-inset-bottom));
+    }
+
     .statsCard,
     .winCard {
         width: min(92vw, 340px);
@@ -291,5 +303,10 @@
     .actions .button {
         font-size: 0.72rem;
         padding: 6px;
+    }
+
+    .undoButton {
+        left: 8px;
+        bottom: calc(8px + env(safe-area-inset-bottom));
     }
 }

@@ -112,13 +112,6 @@ export const GameBoard: React.FC = () => {
                         <button className={`${styles.button} ${styles.secondaryButton}`} onClick={() => setIsStatsOpen(true)}>
                             Stats
                         </button>
-                        <button
-                            className={`${styles.button} ${styles.secondaryButton}`}
-                            onClick={undoMove}
-                            disabled={!moveHistory.length}
-                        >
-                            Undo
-                        </button>
                         <button className={`${styles.button} ${styles.secondaryButton}`} onClick={autoStack}>
                             Auto Finish
                         </button>
@@ -172,6 +165,14 @@ export const GameBoard: React.FC = () => {
                         />
                     ))}
                 </div>
+
+                <button
+                    className={`${styles.button} ${styles.secondaryButton} ${styles.undoButton}`}
+                    onClick={undoMove}
+                    disabled={!moveHistory.length}
+                >
+                    Undo
+                </button>
             </div>
 
             <DragOverlay>
