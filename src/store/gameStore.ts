@@ -16,13 +16,50 @@ interface GameStats {
     gamesWon: number;
 }
 
-const STATS_STORAGE_KEY = 'freecell_stats';
+const DEVICE_ID_KEY = 'freecell_device_id';
+const LEGACY_STATS_KEY = 'freecell_stats';
+const STATS_STORAGE_PREFIX = 'freecell_stats_';
 const defaultStats: GameStats = { gamesPlayed: 0, gamesWon: 0 };
+
+interface MoveSnapshot {
+    tableau: Card[][];
+    freeCells: (Card | null)[];
+    foundations: GameState['foundations'];
+    moves: number;
+    isWon: boolean;
+    isStuck: boolean;
+}
+
+const getDeviceLabel = (): string => {
+    if (typeof navigator === 'undefined') return 'Unknown';
+    const ua = navigator.userAgent ?? '';
+    return /Mobi|Android|iPhone|iPad|iPod/i.test(ua) ? 'Mobile' : 'Desktop';
+};
+
+const getDeviceId = (): string => {
+    if (typeof window === 'undefined') return 'server';
+    try {
+        const existing = window.localStorage.getItem(DEVICE_ID_KEY);
+        if (existing) return existing;
+        const generated = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+            ? crypto.randomUUID()
+            : `device-${Math.random().toString(36).slice(2, 10)}`;
+        window.localStorage.setItem(DEVICE_ID_KEY, generated);
+        return generated;
+    } catch {
+        return 'unknown';
+    }
+};
+
+const deviceId = getDeviceId();
+const deviceLabel = getDeviceLabel();
+const STATS_STORAGE_KEY = `${STATS_STORAGE_PREFIX}${deviceId}`;
 
 const loadStats = (): GameStats => {
     if (typeof window === 'undefined') return defaultStats;
     try {
-        const raw = window.localStorage.getItem(STATS_STORAGE_KEY);
+        const raw = window.localStorage.getItem(STATS_STORAGE_KEY)
+            ?? window.localStorage.getItem(LEGACY_STATS_KEY);
         if (!raw) return defaultStats;
         const parsed = JSON.parse(raw) as Partial<GameStats>;
         return {
@@ -49,8 +86,24 @@ const bumpGamesWon = (stats: GameStats): GameStats => ({
     gamesWon: stats.gamesWon + 1
 });
 
+const createSnapshot = (state: GameStore): MoveSnapshot => ({
+    tableau: state.tableau.map(pile => [...pile]),
+    freeCells: [...state.freeCells],
+    foundations: {
+        hearts: [...state.foundations.hearts],
+        diamonds: [...state.foundations.diamonds],
+        clubs: [...state.foundations.clubs],
+        spades: [...state.foundations.spades]
+    },
+    moves: state.moves,
+    isWon: state.isWon,
+    isStuck: state.isStuck
+});
+
 interface GameStore extends GameState {
     stats: GameStats;
+    deviceLabel: string;
+    moveHistory: MoveSnapshot[];
     resetGame: () => void;
     dealSameCards: () => void;
     drawCard: () => void; // No-op in FreeCell
@@ -59,6 +112,7 @@ interface GameStore extends GameState {
     moveCardToFreeCell: (card: Card, toFreeCellIndex: number, fromPileType: 'tableau' | 'freecell', fromPileIndex?: number) => void;
     attemptMoveToFoundation: (cardId: string) => void;
     autoStack: () => void;
+    undoMove: () => void;
 }
 
 const applyMoveResult = (
@@ -94,13 +148,16 @@ saveStats(initialStats);
 export const useGameStore = create<GameStore>()((set) => ({
     ...initializeGame(),
     stats: initialStats,
+    deviceLabel,
+    moveHistory: [],
 
     resetGame: () => set((state) => {
         const nextStats = bumpGamesPlayed(state.stats);
         saveStats(nextStats);
         return {
             ...initializeGame(),
-            stats: nextStats
+            stats: nextStats,
+            moveHistory: []
         };
     }),
 
@@ -109,7 +166,8 @@ export const useGameStore = create<GameStore>()((set) => ({
         saveStats(nextStats);
         return {
             ...initializeGame(state.dealOrder),
-            stats: nextStats
+            stats: nextStats,
+            moveHistory: []
         };
     }),
 
@@ -142,7 +200,10 @@ export const useGameStore = create<GameStore>()((set) => ({
             [card.suit]: [...targetPile, card]
         };
 
-        return applyMoveResult(state, newTableau, newFreeCells, newFoundations, state.moves + 1);
+        return {
+            ...applyMoveResult(state, newTableau, newFreeCells, newFoundations, state.moves + 1),
+            moveHistory: [...state.moveHistory, createSnapshot(state)]
+        };
     }),
 
     moveCardToTableau: (card, toPileIndex, fromPileType, fromPileIndex) => set((state) => {
@@ -182,7 +243,10 @@ export const useGameStore = create<GameStore>()((set) => ({
         // Add to target
         newTableau[toPileIndex] = [...newTableau[toPileIndex], ...cardsToMove];
 
-        return applyMoveResult(state, newTableau, newFreeCells, newFoundations, state.moves + 1);
+        return {
+            ...applyMoveResult(state, newTableau, newFreeCells, newFoundations, state.moves + 1),
+            moveHistory: [...state.moveHistory, createSnapshot(state)]
+        };
     }),
 
     moveCardToFreeCell: (card, toFreeCellIndex, fromPileType, fromPileIndex) => set((state) => {
@@ -208,7 +272,10 @@ export const useGameStore = create<GameStore>()((set) => ({
         // Add to target
         newFreeCells[toFreeCellIndex] = card;
 
-        return applyMoveResult(state, newTableau, newFreeCells, state.foundations, state.moves + 1);
+        return {
+            ...applyMoveResult(state, newTableau, newFreeCells, state.foundations, state.moves + 1),
+            moveHistory: [...state.moveHistory, createSnapshot(state)]
+        };
     }),
 
     attemptMoveToFoundation: (cardId: string) => set((state) => {
@@ -268,7 +335,10 @@ export const useGameStore = create<GameStore>()((set) => ({
                 [card.suit]: [...currentFoundation, card]
             };
 
-            return applyMoveResult(state, newTableau, newFreeCells, newFoundations, state.moves + 1);
+            return {
+                ...applyMoveResult(state, newTableau, newFreeCells, newFoundations, state.moves + 1),
+                moveHistory: [...state.moveHistory, createSnapshot(state)]
+            };
         }
 
         return state;
@@ -322,6 +392,23 @@ export const useGameStore = create<GameStore>()((set) => ({
 
         if (newMoves === state.moves) return state;
 
-        return applyMoveResult(state, newTableau, newFreeCells, newFoundations, newMoves);
+        return {
+            ...applyMoveResult(state, newTableau, newFreeCells, newFoundations, newMoves),
+            moveHistory: [...state.moveHistory, createSnapshot(state)]
+        };
+    }),
+
+    undoMove: () => set((state) => {
+        if (!state.moveHistory.length) return state;
+        const previous = state.moveHistory[state.moveHistory.length - 1];
+        return {
+            tableau: previous.tableau,
+            freeCells: previous.freeCells,
+            foundations: previous.foundations,
+            moves: previous.moves,
+            isWon: previous.isWon,
+            isStuck: previous.isStuck,
+            moveHistory: state.moveHistory.slice(0, -1)
+        };
     })
 }));

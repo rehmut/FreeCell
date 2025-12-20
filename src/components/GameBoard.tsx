@@ -9,9 +9,9 @@ import styles from './GameBoard.module.css';
 
 export const GameBoard: React.FC = () => {
     const {
-        freeCells, foundations, tableau, moves, startTime, isWon, isStuck, stats,
+        freeCells, foundations, tableau, moves, startTime, isWon, isStuck, stats, moveHistory, deviceLabel,
         moveCardToFoundation, moveCardToTableau, moveCardToFreeCell, resetGame, dealSameCards,
-        attemptMoveToFoundation, autoStack
+        attemptMoveToFoundation, autoStack, undoMove
     } = useGameStore();
 
     const [activeCard, setActiveCard] = React.useState<CardType | null>(null);
@@ -112,6 +112,13 @@ export const GameBoard: React.FC = () => {
                         <button className={`${styles.button} ${styles.secondaryButton}`} onClick={() => setIsStatsOpen(true)}>
                             Stats
                         </button>
+                        <button
+                            className={`${styles.button} ${styles.secondaryButton}`}
+                            onClick={undoMove}
+                            disabled={!moveHistory.length}
+                        >
+                            Undo
+                        </button>
                         <button className={`${styles.button} ${styles.secondaryButton}`} onClick={autoStack}>
                             Auto Finish
                         </button>
@@ -208,6 +215,10 @@ export const GameBoard: React.FC = () => {
                 <div className={styles.winOverlay} onClick={() => setIsStatsOpen(false)}>
                     <div className={styles.statsCard} onClick={(event) => event.stopPropagation()}>
                         <div className={styles.winTitle}>Statistics</div>
+                        <div className={styles.statsRow}>
+                            <span>Device</span>
+                            <span>{deviceLabel}</span>
+                        </div>
                         <div className={styles.statsRow}>
                             <span>Games Played</span>
                             <span>{stats.gamesPlayed}</span>
