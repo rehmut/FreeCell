@@ -30,7 +30,6 @@ export const GameBoard: React.FC = () => {
     const [elapsedSeconds, setElapsedSeconds] = React.useState(0);
     const [isStatsOpen, setIsStatsOpen] = React.useState(false);
     const [winBurst, setWinBurst] = React.useState<WinBurstCard[]>([]);
-    const [isDragging, setIsDragging] = React.useState(false);
 
     React.useEffect(() => {
         if (!startTime) return;
@@ -74,19 +73,17 @@ export const GameBoard: React.FC = () => {
         : 0;
 
     const sensors = useSensors(
-        useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
-        useSensor(TouchSensor, { activationConstraint: { delay: 140, tolerance: 8 } })
+        useSensor(MouseSensor),
+        useSensor(TouchSensor)
     );
 
     const handleDragStart = (event: any) => {
         setActiveCard(event.active.data.current as CardType);
-        setIsDragging(true);
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
         setActiveCard(null);
-        setIsDragging(false);
 
         if (!over) return;
 
@@ -130,55 +127,11 @@ export const GameBoard: React.FC = () => {
         }
     };
 
-    React.useEffect(() => {
-        if (!isDragging || typeof window === 'undefined') return;
-        const preventDefault = (event: TouchEvent) => {
-            event.preventDefault();
-        };
-        const preventWheel = (event: WheelEvent) => {
-            event.preventDefault();
-        };
-        const body = document.body;
-        const root = document.documentElement;
-        const prevBody = {
-            overflow: body.style.overflow,
-            overscrollBehavior: body.style.overscrollBehavior,
-            touchAction: body.style.touchAction
-        };
-        const prevRoot = {
-            overflow: root.style.overflow,
-            overscrollBehavior: root.style.overscrollBehavior,
-            touchAction: root.style.touchAction
-        };
-
-        body.style.overflow = 'hidden';
-        body.style.overscrollBehavior = 'none';
-        body.style.touchAction = 'none';
-        root.style.overflow = 'hidden';
-        root.style.overscrollBehavior = 'none';
-        root.style.touchAction = 'none';
-
-        window.addEventListener('touchmove', preventDefault, { passive: false });
-        window.addEventListener('wheel', preventWheel, { passive: false });
-
-        return () => {
-            window.removeEventListener('touchmove', preventDefault);
-            window.removeEventListener('wheel', preventWheel);
-            body.style.overflow = prevBody.overflow;
-            body.style.overscrollBehavior = prevBody.overscrollBehavior;
-            body.style.touchAction = prevBody.touchAction;
-            root.style.overflow = prevRoot.overflow;
-            root.style.overscrollBehavior = prevRoot.overscrollBehavior;
-            root.style.touchAction = prevRoot.touchAction;
-        };
-    }, [isDragging]);
-
     return (
         <DndContext
             sensors={sensors}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
-            onDragCancel={() => setIsDragging(false)}
         >
             <div className={styles.board}>
                 <div className={styles.header}>

@@ -18,7 +18,6 @@ export const Card: React.FC<CardProps> = ({ card, isDraggable = false, onClick, 
         disabled: !isDraggable,
     });
     const lastTapRef = React.useRef<number>(0);
-    const doubleTapWindow = 320;
 
     const transformStyle = transform ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
@@ -31,7 +30,7 @@ export const Card: React.FC<CardProps> = ({ card, isDraggable = false, onClick, 
             if (isDragging) return;
             if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
             const now = Date.now();
-            if (now - lastTapRef.current < doubleTapWindow) {
+            if (now - lastTapRef.current < 260) {
                 lastTapRef.current = 0;
                 onDoubleClick?.();
                 return;
@@ -73,7 +72,7 @@ export const Card: React.FC<CardProps> = ({ card, isDraggable = false, onClick, 
                 if (isDragging) return;
                 if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
                 const now = Date.now();
-                if (now - lastTapRef.current < doubleTapWindow) {
+                if (now - lastTapRef.current < 260) {
                     lastTapRef.current = 0;
                     onDoubleClick?.();
                     return;
