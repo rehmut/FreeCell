@@ -62,7 +62,7 @@ export const Card: React.FC<CardProps> = ({ card, isDraggable = false, onClick, 
             style={{
                 ...style,
                 ...transformStyle,
-                opacity: isDragging ? 0.5 : 1,
+                opacity: isDragging ? 0 : 1,
                 backgroundImage: `url(${imageUrl})`,
                 backgroundSize: '100% 100%',
                 backgroundRepeat: 'no-repeat'

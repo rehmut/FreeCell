@@ -178,6 +178,7 @@ export const GameBoard: React.FC = () => {
             sensors={sensors}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
+            autoScroll={false}
             onDragCancel={() => setIsDragging(false)}
         >
             <div className={styles.board}>
