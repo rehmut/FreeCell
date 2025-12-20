@@ -258,7 +258,7 @@ export const GameBoard: React.FC = () => {
             </div>
 
             <DragOverlay>
-                {activeCard ? <Card card={activeCard} isOverlay /> : null}
+                {activeCard ? <Card card={activeCard} /> : null}
             </DragOverlay>
 
             {isWon && (
