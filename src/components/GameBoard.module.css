@@ -7,6 +7,7 @@
     padding: 8px 8px 16px;
     box-sizing: border-box;
     gap: 12px;
+    touch-action: none;
 }
 
 .topArea {
@@ -56,6 +57,7 @@
     flex-grow: 1;
     gap: var(--pile-gap);
     margin-top: 6px;
+    touch-action: none;
 }
 
 .header {
@@ -253,7 +255,7 @@
         overflow-x: auto;
         padding-bottom: 8px;
         justify-content: flex-start;
-        touch-action: pan-x;
+        touch-action: none;
     }
 }
 
