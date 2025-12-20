@@ -6,12 +6,13 @@ import styles from './Card.module.css';
 interface CardProps {
     card: CardType;
     isDraggable?: boolean;
+    isOverlay?: boolean;
     onClick?: () => void;
     onDoubleClick?: () => void;
     style?: React.CSSProperties;
 }
 
-export const Card: React.FC<CardProps> = ({ card, isDraggable = false, onClick, onDoubleClick, style }) => {
+export const Card: React.FC<CardProps> = ({ card, isDraggable = false, isOverlay = false, onClick, onDoubleClick, style }) => {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: card.id,
         data: card,
@@ -20,11 +21,15 @@ export const Card: React.FC<CardProps> = ({ card, isDraggable = false, onClick, 
     const lastTapRef = React.useRef<number>(0);
     const doubleTapWindow = 320;
 
-    const transformStyle = transform ? {
+    const transformStyle = transform && !isOverlay ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
         zIndex: 1000,
         transition: 'none', // Disable transition during drag to prevent 'tracing' lag
     } : {};
+    const isActiveDrag = isDragging && !isOverlay;
+    const dragListeners = isOverlay ? undefined : listeners;
+    const dragAttributes = isOverlay ? undefined : attributes;
+    const dragRef = isOverlay ? undefined : setNodeRef;
 
     if (!card.faceUp) {
         const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -55,14 +60,14 @@ export const Card: React.FC<CardProps> = ({ card, isDraggable = false, onClick, 
 
     return (
         <div
-            ref={setNodeRef}
-            {...listeners}
-            {...attributes}
-            className={`${styles.card} ${isDraggable ? styles.draggable : styles.static}`}
+            ref={dragRef}
+            {...dragListeners}
+            {...dragAttributes}
+            className={`${styles.card} ${isDraggable && !isOverlay ? styles.draggable : styles.static}`}
             style={{
                 ...style,
                 ...transformStyle,
-                opacity: isDragging ? 0 : 1,
+                opacity: isActiveDrag ? 0 : 1,
                 backgroundImage: `url(${imageUrl})`,
                 backgroundSize: '100% 100%',
                 backgroundRepeat: 'no-repeat'

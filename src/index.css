@@ -1,3 +1,11 @@
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
 :root {
   --card-aspect: 0.62;
   --card-width: clamp(72px, 8.5vw, 96px);
@@ -21,7 +29,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
-  touch-action: manipulation;
+  touch-action: none;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
   background: #0a2c22;
