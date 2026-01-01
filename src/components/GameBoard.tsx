@@ -23,7 +23,7 @@ export const GameBoard: React.FC = () => {
     const {
         freeCells, foundations, tableau, moves, startTime, isWon, isStuck, stats, moveHistory, deviceLabel,
         moveCardToFoundation, moveCardToTableau, moveCardToFreeCell, resetGame, dealSameCards,
-        attemptMoveToFoundation, autoStack, undoMove
+        attemptMoveToFoundation, autoStack, autoMoveCard, undoMove
     } = useGameStore();
 
     const [activeCard, setActiveCard] = React.useState<CardType | null>(null);
@@ -182,6 +182,7 @@ export const GameBoard: React.FC = () => {
                                     cards={card ? [card] : []}
                                     type="freecell"
                                     onCardDoubleClick={(c) => attemptMoveToFoundation(c.id)}
+                                    onCardSingleTap={(c) => autoMoveCard(c.id)}
                                 />
                             ))}
                         </div>
@@ -196,6 +197,7 @@ export const GameBoard: React.FC = () => {
                             cards={cards}
                             type="tableau"
                             onCardDoubleClick={(c) => attemptMoveToFoundation(c.id)}
+                            onCardSingleTap={(c) => autoMoveCard(c.id)}
                         />
                     ))}
                 </div>

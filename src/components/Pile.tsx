@@ -11,9 +11,10 @@ interface PileProps {
     type: PileType;
     onCardClick?: (card: CardType) => void;
     onCardDoubleClick?: (card: CardType) => void;
+    onCardSingleTap?: (card: CardType) => void;
 }
 
-export const Pile: React.FC<PileProps> = ({ id, cards, type, onCardClick, onCardDoubleClick }) => {
+export const Pile: React.FC<PileProps> = ({ id, cards, type, onCardClick, onCardDoubleClick, onCardSingleTap }) => {
     const { setNodeRef } = useDroppable({
         id: id,
         data: { type, pileId: id },
@@ -63,6 +64,7 @@ export const Pile: React.FC<PileProps> = ({ id, cards, type, onCardClick, onCard
                         style={style}
                         onClick={() => onCardClick?.(card)}
                         onDoubleClick={() => onCardDoubleClick?.(card)}
+                        onSingleTap={() => onCardSingleTap?.(card)}
                     />
                 );
             })}

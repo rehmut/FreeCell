@@ -182,3 +182,75 @@ export const hasAvailableMoves = (
 export const checkWinCondition = (foundations: { [key in Suit]: Card[] }): boolean => {
     return Object.values(foundations).every(pile => pile.length === 13);
 };
+
+export interface AutoMoveDestination {
+    type: 'foundation' | 'tableau' | 'freecell' | null;
+    index?: number;
+    cardsToMove: Card[];
+}
+
+export const findAutoMoveDestination = (
+    card: Card,
+    cardIndex: number,
+    sourcePile: Card[],
+    sourcePileType: 'tableau' | 'freecell',
+    tableau: Card[][],
+    freeCells: (Card | null)[],
+    foundations: { [key in Suit]: Card[] },
+    sourcePileIndex?: number
+): AutoMoveDestination => {
+    // Determine cards to move
+    let cardsToMove: Card[] = [card];
+
+    if (sourcePileType === 'tableau' && cardIndex < sourcePile.length - 1) {
+        // Card is in middle of tableau pile - check if cards below form valid stack
+        const potentialStack = sourcePile.slice(cardIndex);
+        if (isValidTableauStack(potentialStack)) {
+            cardsToMove = potentialStack;
+        }
+        // If not a valid stack, only move the single card (which will likely fail)
+    }
+
+    // Priority 1 - Foundation (only for single cards)
+    if (cardsToMove.length === 1) {
+        if (canMoveToFoundation(card, foundations[card.suit])) {
+            return { type: 'foundation', cardsToMove };
+        }
+    }
+
+    // Priority 2 - Tableau
+    for (let i = 0; i < tableau.length; i++) {
+        // Skip source pile if moving from tableau
+        if (sourcePileType === 'tableau' && sourcePileIndex === i) {
+            continue;
+        }
+
+        const targetPile = tableau[i];
+
+        // Check if top card of stack can move to this pile
+        if (canMoveToTableau(cardsToMove[0], targetPile)) {
+            // For tableau-to-tableau, verify we can move the stack
+            if (sourcePileType === 'tableau' && sourcePileIndex !== undefined) {
+                const maxMovable = getMaxMovableCards(tableau, freeCells, sourcePileIndex, i);
+                if (cardsToMove.length <= maxMovable) {
+                    return { type: 'tableau', index: i, cardsToMove };
+                }
+            } else {
+                // From freecell - always single card, so can move
+                return { type: 'tableau', index: i, cardsToMove };
+            }
+        }
+    }
+
+    // Priority 3 - Free Cell (only for single cards)
+    if (cardsToMove.length === 1) {
+        for (let i = 0; i < freeCells.length; i++) {
+            if (canMoveToFreeCell(freeCells, i)) {
+                return { type: 'freecell', index: i, cardsToMove };
+            }
+        }
+    }
+
+    // No valid move found
+    return { type: null, cardsToMove: [] };
+};

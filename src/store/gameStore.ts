@@ -8,7 +8,8 @@ import {
     checkWinCondition,
     getMaxMovableCards,
     isValidTableauStack,
-    hasAvailableMoves
+    hasAvailableMoves,
+    findAutoMoveDestination
 } from '../logic/solitaire';
 
 interface GameStats {
@@ -112,6 +113,7 @@ interface GameStore extends GameState {
     moveCardToFreeCell: (card: Card, toFreeCellIndex: number, fromPileType: 'tableau' | 'freecell', fromPileIndex?: number) => void;
     attemptMoveToFoundation: (cardId: string) => void;
     autoStack: () => void;
+    autoMoveCard: (cardId: string) => void;
     undoMove: () => void;
 }
 
@@ -396,6 +398,132 @@ export const useGameStore = create<GameStore>()((set) => ({
             ...applyMoveResult(state, newTableau, newFreeCells, newFoundations, newMoves),
             moveHistory: [...state.moveHistory, createSnapshot(state)]
         };
+    }),
+
+    autoMoveCard: (cardId: string) => set((state) => {
+        const { tableau, freeCells, foundations } = state;
+
+        // Locate the card
+        let card: Card | undefined;
+        let sourcePileType: 'tableau' | 'freecell' | undefined;
+        let sourcePileIndex: number | undefined;
+        let cardIndex: number | undefined;
+        let sourcePile: Card[] = [];
+
+        // Search tableau
+        for (let i = 0; i < tableau.length; i++) {
+            const idx = tableau[i].findIndex(c => c.id === cardId);
+            if (idx !== -1) {
+                card = tableau[i][idx];
+                sourcePileType = 'tableau';
+                sourcePileIndex = i;
+                cardIndex = idx;
+                sourcePile = tableau[i];
+                break;
+            }
+        }
+
+        // Search freecells
+        if (!card) {
+            const idx = freeCells.findIndex(c => c?.id === cardId);
+            if (idx !== -1 && freeCells[idx]) {
+                card = freeCells[idx]!;
+                sourcePileType = 'freecell';
+                sourcePileIndex = idx;
+                cardIndex = 0;
+                sourcePile = [card];
+            }
+        }
+
+        // If card not found, return unchanged
+        if (!card || !sourcePileType || sourcePileIndex === undefined || cardIndex === undefined) {
+            return state;
+        }
+
+        // Find best destination
+        const destination = findAutoMoveDestination(
+            card,
+            cardIndex,
+            sourcePile,
+            sourcePileType,
+            tableau,
+            freeCells,
+            foundations,
+            sourcePileIndex
+        );
+
+        // Execute move based on destination type
+        if (destination.type === 'foundation') {
+            if (!canMoveToFoundation(card, foundations[card.suit])) return state;
+
+            let newTableau = [...tableau];
+            let newFreeCells = [...freeCells];
+
+            if (sourcePileType === 'tableau') {
+                newTableau[sourcePileIndex] = newTableau[sourcePileIndex].slice(0, -1);
+            } else {
+                newFreeCells[sourcePileIndex] = null;
+            }
+
+            const newFoundations = {
+                ...foundations,
+                [card.suit]: [...foundations[card.suit], card]
+            };
+
+            return {
+                ...applyMoveResult(state, newTableau, newFreeCells, newFoundations, state.moves + 1),
+                moveHistory: [...state.moveHistory, createSnapshot(state)]
+            };
+        } else if (destination.type === 'tableau') {
+            const targetIndex = destination.index!;
+            const targetPile = tableau[targetIndex];
+
+            if (!canMoveToTableau(destination.cardsToMove[0], targetPile)) return state;
+
+            let newTableau = tableau.map(pile => [...pile]);
+            let newFreeCells = [...freeCells];
+
+            // Remove from source
+            if (sourcePileType === 'tableau') {
+                if (sourcePileIndex === targetIndex) return state;
+                const maxMovable = getMaxMovableCards(newTableau, newFreeCells, sourcePileIndex, targetIndex);
+                if (destination.cardsToMove.length > maxMovable) return state;
+                newTableau[sourcePileIndex] = newTableau[sourcePileIndex].slice(0, cardIndex);
+            } else {
+                newFreeCells[sourcePileIndex] = null;
+            }
+
+            // Add to target
+            newTableau[targetIndex] = [...newTableau[targetIndex], ...destination.cardsToMove];
+
+            return {
+                ...applyMoveResult(state, newTableau, newFreeCells, state.foundations, state.moves + 1),
+                moveHistory: [...state.moveHistory, createSnapshot(state)]
+            };
+        } else if (destination.type === 'freecell') {
+            const cellIndex = destination.index!;
+
+            if (!canMoveToFreeCell(freeCells, cellIndex)) return state;
+
+            let newTableau = [...tableau];
+            let newFreeCells = [...freeCells];
+
+            if (sourcePileType === 'tableau') {
+                newTableau[sourcePileIndex] = newTableau[sourcePileIndex].slice(0, -1);
+            } else {
+                newFreeCells[sourcePileIndex] = null;
+            }
+
+            newFreeCells[cellIndex] = card;
+
+            return {
+                ...applyMoveResult(state, newTableau, newFreeCells, state.foundations, state.moves + 1),
+                moveHistory: [...state.moveHistory, createSnapshot(state)]
+            };
+        }
+
+        // No valid move found - return state unchanged
+        return state;
     }),
 
     undoMove: () => set((state) => {
