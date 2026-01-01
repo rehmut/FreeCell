@@ -63,7 +63,7 @@ export const Card: React.FC<CardProps> = ({ card, isDraggable = false, onClick, 
         pointerDownRef.current = null;
 
         const now = Date.now();
-        const DOUBLE_TAP_THRESHOLD = 260;
+        const DOUBLE_TAP_THRESHOLD = 200;
 
         if (now - lastTapRef.current < DOUBLE_TAP_THRESHOLD) {
             // This is a double-tap

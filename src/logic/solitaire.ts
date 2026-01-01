@@ -211,14 +211,7 @@ export const findAutoMoveDestination = (
         // If not a valid stack, only move the single card (which will likely fail)
     }
 
-    // Priority 1 - Foundation (only for single cards)
-    if (cardsToMove.length === 1) {
-        if (canMoveToFoundation(card, foundations[card.suit])) {
-            return { type: 'foundation', cardsToMove };
-        }
-    }
-
-    // Priority 2 - Tableau
+    // Priority 1 - Tableau (most common move during gameplay)
     for (let i = 0; i < tableau.length; i++) {
         // Skip source pile if moving from tableau
         if (sourcePileType === 'tableau' && sourcePileIndex === i) {
@@ -239,6 +232,13 @@ export const findAutoMoveDestination = (
                 // From freecell - always single card, so can move
                 return { type: 'tableau', index: i, cardsToMove };
             }
+        }
+    }
+
+    // Priority 2 - Foundation (only for single cards)
+    if (cardsToMove.length === 1) {
+        if (canMoveToFoundation(card, foundations[card.suit])) {
+            return { type: 'foundation', cardsToMove };
         }
     }
 
