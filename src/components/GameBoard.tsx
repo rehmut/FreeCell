@@ -73,8 +73,16 @@ export const GameBoard: React.FC = () => {
         : 0;
 
     const sensors = useSensors(
-        useSensor(MouseSensor),
-        useSensor(TouchSensor)
+        useSensor(MouseSensor, {
+            activationConstraint: {
+                distance: 10, // Require 10px movement before drag starts
+            }
+        }),
+        useSensor(TouchSensor, {
+            activationConstraint: {
+                distance: 10, // Require 10px movement before drag starts
+            }
+        })
     );
 
     const handleDragStart = (event: any) => {
