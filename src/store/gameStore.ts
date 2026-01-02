@@ -402,6 +402,7 @@ export const useGameStore = create<GameStore>()((set) => ({
 
     autoMoveCard: (cardId: string) => set((state) => {
         const { tableau, freeCells, foundations } = state;
+        console.log('🎯 autoMoveCard called for card:', cardId);
 
         // Locate the card
         let card: Card | undefined;
@@ -451,6 +452,7 @@ export const useGameStore = create<GameStore>()((set) => ({
             foundations,
             sourcePileIndex
         );
+        console.log('🎯 Auto-move destination:', destination);
 
         // Execute move based on destination type
         if (destination.type === 'foundation') {

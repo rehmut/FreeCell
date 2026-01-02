@@ -29,18 +29,12 @@ export const Card: React.FC<CardProps> = ({ card, isDraggable = false, onClick, 
     } : {};
 
     const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-        if (event.pointerType === 'touch' || event.pointerType === 'pen') {
-            pointerDownRef.current = { x: event.clientX, y: event.clientY };
-        }
+        // Track all pointer types (mouse, touch, pen) for tap detection
+        pointerDownRef.current = { x: event.clientX, y: event.clientY };
     };
 
     const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
         if (isDragging) {
-            pointerDownRef.current = null;
-            return;
-        }
-
-        if (event.pointerType !== 'touch' && event.pointerType !== 'pen') {
             pointerDownRef.current = null;
             return;
         }
@@ -67,6 +61,7 @@ export const Card: React.FC<CardProps> = ({ card, isDraggable = false, onClick, 
 
         if (now - lastTapRef.current < DOUBLE_TAP_THRESHOLD) {
             // This is a double-tap
+            console.log('🔵 DOUBLE TAP detected');
             if (singleTapTimerRef.current) {
                 window.clearTimeout(singleTapTimerRef.current);
                 singleTapTimerRef.current = null;
@@ -83,6 +78,7 @@ export const Card: React.FC<CardProps> = ({ card, isDraggable = false, onClick, 
 
             singleTapTimerRef.current = window.setTimeout(() => {
                 // Confirmed single tap
+                console.log('🟢 SINGLE TAP detected');
                 onSingleTap?.();
                 singleTapTimerRef.current = null;
             }, DOUBLE_TAP_THRESHOLD);
