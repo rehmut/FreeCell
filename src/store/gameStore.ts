@@ -351,12 +351,30 @@ export const useGameStore = create<GameStore>()((set) => ({
 
         let newTableau = state.tableau.map(pile => [...pile]);
         let newFreeCells = [...state.freeCells];
-        let newFoundations = { ...state.foundations };
+        let newFoundations = {
+            hearts: [...state.foundations.hearts],
+            diamonds: [...state.foundations.diamonds],
+            clubs: [...state.foundations.clubs],
+            spades: [...state.foundations.spades]
+        };
         let newMoves = state.moves;
+
+        // Count total cards before auto-finish
+        const countCards = () => {
+            const tableauCount = newTableau.reduce((sum, pile) => sum + pile.length, 0);
+            const freeCellCount = newFreeCells.filter(c => c !== null).length;
+            const foundationCount = Object.values(newFoundations).reduce((sum, pile) => sum + pile.length, 0);
+            return { tableauCount, freeCellCount, foundationCount, total: tableauCount + freeCellCount + foundationCount };
+        };
+
+        const initialCount = countCards();
+        console.log('🎴 Auto-finish started. Initial card count:', initialCount);
 
         const moveCard = (card: Card, fromPile: 'tableau' | 'freecell', fromIndex: number) => {
             const targetPile = newFoundations[card.suit];
             if (!canMoveToFoundation(card, targetPile)) return false;
+
+            const beforeCount = countCards();
 
             if (fromPile === 'tableau') {
                 const sourcePile = newTableau[fromIndex];
@@ -372,12 +390,23 @@ export const useGameStore = create<GameStore>()((set) => ({
                 [card.suit]: [...targetPile, card]
             };
             newMoves += 1;
+
+            const afterCount = countCards();
+            console.log(`🎴 Moved ${card.rank} of ${card.suit} from ${fromPile}[${fromIndex}] to foundation. Before: ${beforeCount.total}, After: ${afterCount.total}`);
+
+            if (beforeCount.total !== afterCount.total) {
+                console.error('⚠️ CARD COUNT MISMATCH!', { before: beforeCount, after: afterCount, card });
+            }
+
             return true;
         };
 
         let moved = true;
+        let iteration = 0;
         while (moved) {
             moved = false;
+            iteration++;
+            console.log(`🔄 Auto-finish iteration ${iteration}`);
 
             for (let i = 0; i < newFreeCells.length; i++) {
                 const card = newFreeCells[i];
@@ -390,6 +419,13 @@ export const useGameStore = create<GameStore>()((set) => ({
                 const card = pile[pile.length - 1];
                 if (moveCard(card, 'tableau', i)) moved = true;
             }
+        }
+
+        const finalCount = countCards();
+        console.log('🎴 Auto-finish completed. Final card count:', finalCount);
+
+        if (initialCount.total !== finalCount.total) {
+            console.error('⚠️ CARDS LOST DURING AUTO-FINISH!', { initial: initialCount, final: finalCount, lost: initialCount.total - finalCount.total });
         }
 
         if (newMoves === state.moves) return state;
