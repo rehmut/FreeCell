@@ -1,10 +1,10 @@
 :root {
   --card-aspect: 0.62;
-  --card-width: clamp(72px, 8.5vw, 96px);
+  --card-width: clamp(78px, 9.5vw, 110px);
   --card-height: calc(var(--card-width) / var(--card-aspect));
   --card-radius: clamp(8px, 0.9vw, 12px);
-  --stack-offset: clamp(34px, 3.4vw, 48px);
-  --pile-gap: clamp(6px, 1vw, 12px);
+  --stack-offset: clamp(38px, 3.8vw, 54px);
+  --pile-gap: clamp(4px, 0.8vw, 8px);
   --board-max: 1100px;
   --panel-bg: rgba(255, 255, 255, 0.08);
   --panel-border: rgba(255, 255, 255, 0.18);
@@ -40,18 +40,18 @@ body {
 
 @media (max-width: 720px) {
   :root {
-    --card-width: clamp(44px, 10vw, 66px);
+    --card-width: clamp(48px, 11vw, 72px);
     --card-radius: clamp(7px, 0.9vw, 10px);
-    --stack-offset: clamp(20px, 3.8vw, 30px);
-    --pile-gap: clamp(3px, 1.2vw, 7px);
+    --stack-offset: clamp(24px, 4.2vw, 36px);
+    --pile-gap: clamp(2px, 1vw, 5px);
   }
 }
 
 @media (max-width: 560px) {
   :root {
-    --card-width: clamp(36px, 10vw, 56px);
+    --card-width: clamp(40px, 11vw, 60px);
     --card-radius: clamp(6px, 0.9vw, 9px);
-    --stack-offset: clamp(18px, 3.6vw, 26px);
-    --pile-gap: clamp(2px, 0.9vw, 5px);
+    --stack-offset: clamp(22px, 4vw, 30px);
+    --pile-gap: clamp(1px, 0.7vw, 4px);
   }
 }
