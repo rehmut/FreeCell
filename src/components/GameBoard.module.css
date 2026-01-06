@@ -22,9 +22,17 @@
     gap: var(--pile-gap);
 }
 
+.pilesArea > * {
+    transform: scale(0.92);
+}
+
 .foundations {
     display: flex;
     gap: var(--pile-gap);
+}
+
+.foundations > * {
+    transform: scale(0.92);
 }
 
 .section {
