@@ -476,6 +476,7 @@ export const useGameStore = create<GameStore>()((set) => ({
         if (!card || !sourcePileType || sourcePileIndex === undefined || cardIndex === undefined) {
             return state;
         }
+        const isTopTableauCard = sourcePileType !== 'tableau' || cardIndex === sourcePile.length - 1;
 
         // Find best destination
         const destination = findAutoMoveDestination(
@@ -492,6 +493,7 @@ export const useGameStore = create<GameStore>()((set) => ({
 
         // Execute move based on destination type
         if (destination.type === 'foundation') {
+            if (!isTopTableauCard) return state;
             if (!canMoveToFoundation(card, foundations[card.suit])) return state;
 
             let newTableau = [...tableau];
@@ -515,6 +517,7 @@ export const useGameStore = create<GameStore>()((set) => ({
         } else if (destination.type === 'tableau') {
             const targetIndex = destination.index!;
             const targetPile = tableau[targetIndex];
+            const expectedTailLength = sourcePile.length - cardIndex;
 
             if (!canMoveToTableau(destination.cardsToMove[0], targetPile)) return state;
 
@@ -524,6 +527,14 @@ export const useGameStore = create<GameStore>()((set) => ({
             // Remove from source
             if (sourcePileType === 'tableau') {
                 if (sourcePileIndex === targetIndex) return state;
+                // Guard against corrupted auto-move plans: we can only move a full
+                // valid tail stack starting at the selected card.
+                if (
+                    destination.cardsToMove.length !== expectedTailLength ||
+                    destination.cardsToMove[0]?.id !== card.id
+                ) {
+                    return state;
+                }
                 const maxMovable = getMaxMovableCards(newTableau, newFreeCells, sourcePileIndex, targetIndex);
                 if (destination.cardsToMove.length > maxMovable) return state;
                 newTableau[sourcePileIndex] = newTableau[sourcePileIndex].slice(0, cardIndex);
@@ -541,6 +552,7 @@ export const useGameStore = create<GameStore>()((set) => ({
         } else if (destination.type === 'freecell') {
             const cellIndex = destination.index!;
 
+            if (!isTopTableauCard) return state;
             if (!canMoveToFreeCell(freeCells, cellIndex)) return state;
 
             let newTableau = [...tableau];
