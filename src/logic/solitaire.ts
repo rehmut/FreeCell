@@ -218,26 +218,25 @@ export const findAutoMoveDestination = (
         }
     }
 
-    // Priority 2 - Tableau
-    for (let i = 0; i < tableau.length; i++) {
-        // Skip source pile if moving from tableau
-        if (sourcePileType === 'tableau' && sourcePileIndex === i) {
-            continue;
-        }
+    // Priority 2 - Tableau. Prefer extending an existing stack; an empty
+    // column is useful, but should only be consumed when no occupied pile fits.
+    const tableauCandidates = tableau
+        .map((targetPile, index) => ({ targetPile, index }))
+        .filter(({ index }) => sourcePileType !== 'tableau' || sourcePileIndex !== index)
+        .sort((a, b) => Number(a.targetPile.length === 0) - Number(b.targetPile.length === 0));
 
-        const targetPile = tableau[i];
-
+    for (const { targetPile, index } of tableauCandidates) {
         // Check if top card of stack can move to this pile
         if (canMoveToTableau(cardsToMove[0], targetPile)) {
             // For tableau-to-tableau, verify we can move the stack
             if (sourcePileType === 'tableau' && sourcePileIndex !== undefined) {
-                const maxMovable = getMaxMovableCards(tableau, freeCells, sourcePileIndex, i);
+                const maxMovable = getMaxMovableCards(tableau, freeCells, sourcePileIndex, index);
                 if (cardsToMove.length <= maxMovable) {
-                    return { type: 'tableau', index: i, cardsToMove };
+                    return { type: 'tableau', index, cardsToMove };
                 }
             } else {
                 // From freecell - always single card, so can move
-                return { type: 'tableau', index: i, cardsToMove };
+                return { type: 'tableau', index, cardsToMove };
             }
         }
     }

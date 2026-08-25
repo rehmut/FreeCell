@@ -87,4 +87,38 @@ describe('autoMoveCard regression guard', () => {
         expect(after.freeCells.map(card => card?.id ?? null)).toEqual(before.freeCells.map(card => card?.id ?? null));
         expect(allCardIds(after)).toEqual(beforeIds);
     });
+
+    it('prefers moving a valid stack onto an occupied tableau pile over an empty pile to its left', () => {
+        useGameStore.setState({
+            tableau: [
+                [],
+                [makeCard('t1-kc', 'K', 'clubs')],
+                [makeCard('stack-7h', '7', 'hearts'), makeCard('stack-6c', '6', 'clubs')],
+                [makeCard('target-8s', '8', 'spades')],
+                [makeCard('t4-qd', 'Q', 'diamonds')],
+                [makeCard('t5-js', 'J', 'spades')],
+                [makeCard('t6-10h', '10', 'hearts')],
+                [makeCard('t7-9c', '9', 'clubs')]
+            ],
+            freeCells: [null, null, null, null],
+            foundations: {
+                hearts: [],
+                diamonds: [],
+                clubs: [],
+                spades: []
+            },
+            moves: 0,
+            isWon: false,
+            isStuck: false,
+            moveHistory: []
+        });
+
+        useGameStore.getState().autoMoveCard('stack-7h');
+        const after = useGameStore.getState();
+
+        expect(after.tableau[0]).toEqual([]);
+        expect(after.tableau[2]).toEqual([]);
+        expect(after.tableau[3].map(card => card.id)).toEqual(['target-8s', 'stack-7h', 'stack-6c']);
+        expect(after.moves).toBe(1);
+    });
 });

@@ -1,6 +1,6 @@
 import React from 'react';
 import { DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
-import type { DragEndEvent } from '@dnd-kit/core';
+import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { useGameStore } from '../store/gameStore';
 import { Pile } from './Pile';
 import { Card } from './Card';
@@ -19,6 +19,104 @@ type WinBurstCard = {
     delay: number;
 };
 
+type PostWinView = 'result' | 'statistics' | 'finished';
+
+type StatisticsRowsProps = {
+    deviceLabel: string;
+    gamesPlayed: number;
+    gamesWon: number;
+    winRate: number;
+    completedMoves?: number;
+    completedTime?: string;
+};
+
+const StatisticsRows: React.FC<StatisticsRowsProps> = ({
+    deviceLabel,
+    gamesPlayed,
+    gamesWon,
+    winRate,
+    completedMoves,
+    completedTime
+}) => (
+    <>
+        {completedMoves !== undefined && (
+            <div className={styles.statsRow}>
+                <span>Final Moves</span>
+                <span>{completedMoves}</span>
+            </div>
+        )}
+        {completedTime !== undefined && (
+            <div className={styles.statsRow}>
+                <span>Final Time</span>
+                <span>{completedTime}</span>
+            </div>
+        )}
+        <div className={styles.statsDivider} />
+        <div className={styles.statsRow}>
+            <span>Device</span>
+            <span>{deviceLabel}</span>
+        </div>
+        <div className={styles.statsRow}>
+            <span>Games Played</span>
+            <span>{gamesPlayed}</span>
+        </div>
+        <div className={styles.statsRow}>
+            <span>Games Won</span>
+            <span>{gamesWon}</span>
+        </div>
+        <div className={styles.statsRow}>
+            <span>Win Rate</span>
+            <span>{winRate}%</span>
+        </div>
+    </>
+);
+
+type PostWinResultProps = {
+    moves: number;
+    completedTime: string;
+    onShowStatistics: () => void;
+    onDealAgain: () => void;
+    onQuit: () => void;
+};
+
+export const PostWinResult: React.FC<PostWinResultProps> = ({
+    moves,
+    completedTime,
+    onShowStatistics,
+    onDealAgain,
+    onQuit
+}) => (
+    <div className={styles.winCard}>
+        <div className={styles.winTitle}>You win</div>
+        <div className={styles.winText}>
+            Completed in {moves} moves and {completedTime}.
+        </div>
+        <div className={styles.winActions}>
+            <button
+                type="button"
+                className={`${styles.button} ${styles.secondaryButton}`}
+                onClick={onShowStatistics}
+            >
+                Statistics
+            </button>
+            <button
+                type="button"
+                className={`${styles.button} ${styles.primaryButton}`}
+                onClick={onDealAgain}
+            >
+                Deal Again
+            </button>
+            <button
+                type="button"
+                className={`${styles.button} ${styles.quitButton}`}
+                onClick={onQuit}
+            >
+                Quit Game
+            </button>
+        </div>
+    </div>
+);
+
 export const GameBoard: React.FC = () => {
     const {
         freeCells, foundations, tableau, moves, startTime, isWon, isStuck, stats, moveHistory, deviceLabel,
@@ -30,6 +128,7 @@ export const GameBoard: React.FC = () => {
     const [elapsedSeconds, setElapsedSeconds] = React.useState(0);
     const [isStatsOpen, setIsStatsOpen] = React.useState(false);
     const [winBurst, setWinBurst] = React.useState<WinBurstCard[]>([]);
+    const [postWinView, setPostWinView] = React.useState<PostWinView>('result');
 
     React.useEffect(() => {
         if (!startTime) return;
@@ -37,13 +136,15 @@ export const GameBoard: React.FC = () => {
             setElapsedSeconds(Math.max(0, Math.floor((Date.now() - startTime) / 1000)));
         };
         tick();
+        if (isWon) return;
         const interval = window.setInterval(tick, 1000);
         return () => window.clearInterval(interval);
-    }, [startTime]);
+    }, [startTime, isWon]);
 
     React.useEffect(() => {
         if (!isWon) {
             setWinBurst([]);
+            setPostWinView('result');
             return;
         }
         const randomBetween = (min: number, max: number) => Math.random() * (max - min) + min;
@@ -72,6 +173,11 @@ export const GameBoard: React.FC = () => {
         ? Math.round((stats.gamesWon / stats.gamesPlayed) * 1000) / 10
         : 0;
 
+    const handleNewGame = () => {
+        setPostWinView('result');
+        resetGame();
+    };
+
     const sensors = useSensors(
         useSensor(MouseSensor, {
             activationConstraint: {
@@ -85,7 +191,7 @@ export const GameBoard: React.FC = () => {
         })
     );
 
-    const handleDragStart = (event: any) => {
+    const handleDragStart = (event: DragStartEvent) => {
         setActiveCard(event.active.data.current as CardType);
     };
 
@@ -117,21 +223,24 @@ export const GameBoard: React.FC = () => {
         });
 
         // Check foundations
-        Object.entries(foundations).forEach(([, pile]) => {
-            if (pile.find(c => c.id === card.id)) {
-                fromPileType = 'foundation';
-            }
-        });
+        const isFromFoundation = Object.values(foundations).some(pile => pile.some(c => c.id === card.id));
+        if (isFromFoundation) {
+            fromPileType = 'foundation';
+        }
 
         // Handle drop
         if (overId.startsWith('foundation-')) {
-            moveCardToFoundation(card, fromPileType as any, fromPileIndex);
+            if (fromPileType !== 'foundation') {
+                moveCardToFoundation(card, fromPileType, fromPileIndex);
+            }
         } else if (overId.startsWith('tableau-')) {
             const toPileIndex = parseInt(overId.split('-')[1]);
             moveCardToTableau(card, toPileIndex, fromPileType, fromPileIndex);
         } else if (overId.startsWith('freecell-')) {
             const toFreeCellIndex = parseInt(overId.split('-')[1]);
-            moveCardToFreeCell(card, toFreeCellIndex, fromPileType as any, fromPileIndex);
+            if (fromPileType !== 'foundation') {
+                moveCardToFreeCell(card, toFreeCellIndex, fromPileType, fromPileIndex);
+            }
         }
     };
 
@@ -225,7 +334,7 @@ export const GameBoard: React.FC = () => {
 
             {isWon && (
                 <div className={styles.winOverlay}>
-                    {winBurst.length > 0 && (
+                    {postWinView === 'result' && winBurst.length > 0 && (
                         <div className={styles.winCelebration}>
                             {winBurst.map((card) => (
                                 <div
@@ -245,15 +354,69 @@ export const GameBoard: React.FC = () => {
                             ))}
                         </div>
                     )}
-                    <div className={styles.winCard}>
-                        <div className={styles.winTitle}>You win</div>
-                        <div className={styles.winText}>
-                            Completed in {moves} moves.
+                    {postWinView === 'result' && (
+                        <PostWinResult
+                            moves={moves}
+                            completedTime={formatTime(elapsedSeconds)}
+                            onShowStatistics={() => setPostWinView('statistics')}
+                            onDealAgain={handleNewGame}
+                            onQuit={() => setPostWinView('finished')}
+                        />
+                    )}
+
+                    {postWinView === 'statistics' && (
+                        <div className={styles.statsCard}>
+                            <div className={styles.winTitle}>Game Statistics</div>
+                            <StatisticsRows
+                                deviceLabel={deviceLabel}
+                                gamesPlayed={stats.gamesPlayed}
+                                gamesWon={stats.gamesWon}
+                                winRate={winRate}
+                                completedMoves={moves}
+                                completedTime={formatTime(elapsedSeconds)}
+                            />
+                            <div className={styles.modalActions}>
+                                <button
+                                    type="button"
+                                    className={`${styles.button} ${styles.secondaryButton}`}
+                                    onClick={() => setPostWinView('result')}
+                                >
+                                    Back
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`${styles.button} ${styles.quitButton}`}
+                                    onClick={() => setPostWinView('finished')}
+                                >
+                                    Quit Game
+                                </button>
+                            </div>
                         </div>
-                        <button className={`${styles.button} ${styles.primaryButton}`} onClick={resetGame}>
-                            Deal Again
-                        </button>
-                    </div>
+                    )}
+
+                    {postWinView === 'finished' && (
+                        <div className={styles.statsCard}>
+                            <div className={styles.winTitle}>Game Finished</div>
+                            <div className={styles.winText}>Your completed result has been saved.</div>
+                            <StatisticsRows
+                                deviceLabel={deviceLabel}
+                                gamesPlayed={stats.gamesPlayed}
+                                gamesWon={stats.gamesWon}
+                                winRate={winRate}
+                                completedMoves={moves}
+                                completedTime={formatTime(elapsedSeconds)}
+                            />
+                            <div className={styles.modalActions}>
+                                <button
+                                    type="button"
+                                    className={`${styles.button} ${styles.primaryButton}`}
+                                    onClick={handleNewGame}
+                                >
+                                    Play Again
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -280,22 +443,12 @@ export const GameBoard: React.FC = () => {
                 <div className={styles.winOverlay} onClick={() => setIsStatsOpen(false)}>
                     <div className={styles.statsCard} onClick={(event) => event.stopPropagation()}>
                         <div className={styles.winTitle}>Statistics</div>
-                        <div className={styles.statsRow}>
-                            <span>Device</span>
-                            <span>{deviceLabel}</span>
-                        </div>
-                        <div className={styles.statsRow}>
-                            <span>Games Played</span>
-                            <span>{stats.gamesPlayed}</span>
-                        </div>
-                        <div className={styles.statsRow}>
-                            <span>Games Won</span>
-                            <span>{stats.gamesWon}</span>
-                        </div>
-                        <div className={styles.statsRow}>
-                            <span>Win Rate</span>
-                            <span>{winRate}%</span>
-                        </div>
+                        <StatisticsRows
+                            deviceLabel={deviceLabel}
+                            gamesPlayed={stats.gamesPlayed}
+                            gamesWon={stats.gamesWon}
+                            winRate={winRate}
+                        />
                         <div className={styles.modalActions}>
                             <button className={`${styles.button} ${styles.secondaryButton}`} onClick={() => setIsStatsOpen(false)}>
                                 Close

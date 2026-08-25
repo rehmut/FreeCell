@@ -153,6 +153,17 @@
     background: rgba(0, 0, 0, 0.2);
 }
 
+.quitButton {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: var(--text-muted);
+}
+
+.quitButton:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--text-main);
+}
+
 .winOverlay {
     position: fixed;
     inset: 0;
@@ -232,8 +243,25 @@
     font-size: 0.95rem;
 }
 
+.statsDivider {
+    height: 1px;
+    margin: 6px 0;
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.winActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.winActions .quitButton {
+    grid-column: 1 / -1;
+}
+
 .modalActions {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
     justify-content: center;
     margin-top: 10px;
